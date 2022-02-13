@@ -2,17 +2,16 @@
   "name": "@atombrenner/logjs",
   "version": "1.0.0",
   "description": "Log structured json data",
-  "author": "Christian Rodemeyer",
+  "author": "Christian Rodemeyer <atombrenner@gmail.com>",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/atombrenner/logjs#readme",
+  "repository": "github:atombrenner/logjs",
   "main": "lib/log.js",
   "types": "lib/log.d.ts",
   "scripts": {
     "prepare": "rm -rf lib && tsc && jest",
     "build": "tsc",
     "test": "jest"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:atombrenner/logjs.git"
   },
   "devDependencies": {
     "@types/jest": "27.x",

@@ -1,1 +1,6 @@
 !lib/
+lib/*spec*
+src/
+jest.config.js
+.*
+
