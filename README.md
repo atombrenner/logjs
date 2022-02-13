@@ -1,6 +1,6 @@
 # @atombrenner/logjs
 
-Pragmatic JSON logging for humans and Elasticsearch.
+Pragmatic JSON logging with javascript for humans and Elasticsearch.
 
 ## Motivation
 
@@ -15,9 +15,11 @@ requirements are now [YAGNIs](https://martinfowler.com/bliki/Yagni.html).
 
 My goal was to have something really simple, with the focus on
 
-1. Usability: every junior javascript developer should be able to use it.
-2. Progressivly enhance to structured JSON: make it easy to add structured information
-   that can be ingested by Elasticsearch and json log awared services.
+1. Usability: every javascript developer can use it
+2. Progressive enhancable JSON logs:
+   - start with simple message
+   - make it easy to add structured data
+   - format logs as json to make them easy ingestible by Elasticsearch
 3. Should work out of the box in serverless environments
 
 When working with Node or the Browser, you already have a logging framework built in.
@@ -40,16 +42,38 @@ This package does not optimize for:
 - super fine granular log levels. All you need is debug, info, warn, and error.
 - message formatting. Use javascript string templates if you need this.
 
-## Runtime diagram
+## Responsibility
+
+```
++-----------------+                                                 +-------------------+
+|  Application    |                                                 |  Elasticsearch    |
+|                 |                            +--------------+     |                   |
+|     +--------+  | stdout  +------------+     | Log Ingester |     |                   |
+|     | logjs  |----------->| Logstream  |---->|              |---->|                   |
+|     +--------+  |  json   |            |     |              |     |                   |
++-----------------+         +------------+     +--------------+     +-------------------+
+```
+
+The only resposibility for the logging framework inside an applications should be the
+formatting of structured data to json, enriching it with convenience data like levels
+or application names and writing it as fast as possible to stdout.
+
+The Log Ingester can add additional data an log even. It could extract application name or environment from the logstream name. Or it could add the ingestion time.
+The Log Ingester is also responsible for handling unstructured data that might be
+written to a logstream. For example, if the start of you application fails because
+of a missing dependencies, nodejs will write some error message. This error message can
+never be handled by any logging library, so the ingester is responsible for catching
+those edge cases.
+Here is an example ingester for [AWS Logstreams and Elasticsearch](https://github.com/atombrenner/aws-log-to-elastic).
 
 ## Installation
 
-`npm i @atombrenner/log`
+`npm i @atombrenner/logjs`
 
 ## Usage
 
 ```ts
-import { log } from '@atombrenner/log'
+import { log } from '@atombrenner/logjs'
 
 log.info('message')
 log.info('message')
@@ -83,13 +107,13 @@ Errors are converted to objects with an `msg` and `stack` property.
 Then all objects are merged. Duplicate properties are overwritten by the right
 most one with the exception of `msg`, where all values are concatenated.
 
-### Examples
+### Examples of some edge cases
 
 ```ts
 log.info('Count', 42, 'Temperature') // -> {"msg":"Count 42 Temperature"}
 log.info(true, { hasData: false }) // -> {"msg":"true","hasData":"false"}
 log.info('Failure:', new Error('reason')) // -> {"msg":"Failure: reason","stack":"..."}
-log.info({msg: 'a', data: 1}, {msg: 'b', data: 2}) -> // {"msg":"a - b","data":2}
+log.info({msg: 'a', data: 1}, {msg: 'b', data: 2}) -> // {"msg":"a b","data":2}
 ```
 
 ## How to publish a new version
