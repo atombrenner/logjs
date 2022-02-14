@@ -26,7 +26,7 @@ async function execNodeScript(
 
 describe('log', () => {
   const script = `
-   import { log } from './src/log'
+   import { log } from './src'
    log.debug('a debug message')
    log.info('an info message', { meta: 1 })
    log.warn('Warning message:', Error('error'))
@@ -39,12 +39,12 @@ describe('log', () => {
 
       expect(exitCode).toEqual(0)
       expect(stderr).toEqual('')
-      expect(stdout).toEqual('a debug message\n')
+      expect(stdout).toEqual('')
     })
   })
 
   describe('with NODE_ENV=production', () => {
-    it('should output json', async () => {
+    it('should output json lines', async () => {
       const { stdout, stderr, exitCode } = await execNodeScript(script, { NODE_ENV: 'production' })
 
       expect(exitCode).toEqual(0)

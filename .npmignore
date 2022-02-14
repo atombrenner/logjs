@@ -1,5 +1,6 @@
 !lib/
-lib/*spec*
+lib/*.spec.*
+lib/*.test.*
 src/
 jest.config.js
 .*

@@ -1,21 +1,13 @@
-import { mergeArgs } from './normalize'
+import { LogFunction, logJson } from './log-json'
 
 const isProd = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
-
-export type LogFunction = (msg: unknown, ...optional: unknown[]) => void
 
 export type Logger = {
   debug: LogFunction
   info: LogFunction
   warn: LogFunction
   error: LogFunction
-}
-
-function logJson(level: string) {
-  return (...args: any[]) => {
-    console.log(JSON.stringify({ level, ...mergeArgs(args) }))
-  }
 }
 
 function logNothing() {}
@@ -35,7 +27,7 @@ const prodLogger: Logger = {
 }
 
 const testLogger: Logger = {
-  debug: console.debug,
+  debug: logNothing,
   info: logNothing,
   warn: logNothing,
   error: logNothing,

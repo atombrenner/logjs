@@ -1,3 +1,11 @@
+export type LogFunction = (msg: unknown, ...optional: unknown[]) => void
+
+export function logJson(level: string): LogFunction {
+  return (...args: unknown[]) => {
+    console.log(JSON.stringify({ level, ...mergeArgs(args) }))
+  }
+}
+
 export function mergeArgs(args: any[]): NormalizedArg {
   const normalized = args.map(normalizeArg)
   const msg = normalized

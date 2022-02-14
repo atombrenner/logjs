@@ -6,8 +6,8 @@
   "license": "GPL-3.0-or-later",
   "homepage": "https://github.com/atombrenner/npm-log-json#readme",
   "repository": "github:atombrenner/npm-log-json",
-  "main": "lib/log.js",
-  "types": "lib/log.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "prepare": "rm -rf lib && tsc && jest",
     "build": "tsc",

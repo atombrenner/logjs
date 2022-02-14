@@ -1,4 +1,4 @@
-import { normalizeArg, mergeArgs } from './normalize'
+import { normalizeArg, mergeArgs } from './log-json'
 
 describe('normalizeArg', () => {
   it('should use string argument as "msg" property', () => {
@@ -23,7 +23,7 @@ describe('normalizeArg', () => {
   it('should extract Error information', () => {
     const meta = normalizeArg(Error('hullebulle'))
     expect(meta.msg).toEqual('hullebulle')
-    expect(meta.stack).toMatch(/at .*normalize.spec.ts/)
+    expect(meta.stack).toMatch(/at .*.spec.ts/)
   })
 
   it('should pass objects unmodified', () => {
