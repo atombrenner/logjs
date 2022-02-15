@@ -27,6 +27,7 @@ async function execNodeScript(
 describe('log', () => {
   const script = `
    import { log } from './src'
+   Date.now = () => 123456789
    log.debug('a debug message')
    log.info('an info message', { meta: 1 })
    log.warn('Warning message:', Error('error'))
@@ -48,19 +49,16 @@ describe('log', () => {
       const { stdout, stderr, exitCode } = await execNodeScript(script, { NODE_ENV: 'production' })
 
       expect(exitCode).toEqual(0)
-      expect(stderr).toEqual('')
 
       const lines = stdout.split('\n')
-      expect(lines[0]).toEqual('{"level":"debug","msg":"a debug message"}')
-      expect(lines[1]).toEqual('{"level":"info","msg":"an info message","meta":1}')
+      expect(lines[0]).toEqual('{"time":123456789,"level":"debug","msg":"a debug message"}')
+      expect(lines[1]).toEqual('{"time":123456789,"level":"info","msg":"an info message","meta":1}')
 
-      const line2 = JSON.parse(lines[2])
-      expect(line2).toMatchObject({ level: 'warn', msg: 'Warning message: error' })
-      expect(line2.stack).toMatch(/^Error: error/)
-
-      const line3 = JSON.parse(lines[3])
-      expect(line3).toMatchObject({ level: 'error', msg: 'Error message: error', meta: 2 })
-      expect(line3.stack).toMatch(/^Error: error/)
+      const stderrLines = stderr.split('\n').map((l) => l && JSON.parse(l))
+      expect(stderrLines[0]).toMatchObject({ level: 'warn', msg: 'Warning message: error' })
+      expect(stderrLines[0].stack).toMatch(/^Error: error/)
+      expect(stderrLines[1]).toMatchObject({ level: 'error', msg: 'Error message: error', meta: 2 })
+      expect(stderrLines[1].stack).toMatch(/^Error: error/)
     })
   })
 
@@ -73,6 +71,24 @@ describe('log', () => {
         /Warning message: Error: error.*at .*Error message: Error: error.*at /s
       )
       expect(stdout).toEqual('a debug message\nan info message { meta: 1 }\n')
+    })
+  })
+
+  describe('with AWS_LAMBDA_FUNCTION_NAME defined', () => {
+    it('should not add time and level', async () => {
+      const script = `
+      import { log } from './src'
+      Date.now = () => 123456789
+      log.info('message')`
+
+      const { stdout, stderr, exitCode } = await execNodeScript(script, {
+        NODE_ENV: 'production',
+        AWS_LAMBDA_FUNCTION_NAME: 'someName',
+      })
+
+      expect(exitCode).toEqual(0)
+      expect(stderr).toEqual('')
+      expect(stdout.trim()).toEqual('{"msg":"message"}')
     })
   })
 })

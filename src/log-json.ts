@@ -1,8 +1,9 @@
 export type LogFunction = (msg: unknown, ...optional: unknown[]) => void
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
-export function logJson(level: string): LogFunction {
+export function logJson(level: LogLevel): LogFunction {
   return (...args: unknown[]) => {
-    console.log(JSON.stringify({ level, ...mergeArgs(args) }))
+    console[level](JSON.stringify({ ...context(), ...lambda(level), ...mergeArgs(args) }))
   }
 }
 
@@ -30,5 +31,29 @@ export function normalizeArg(arg: unknown): NormalizedArg {
     return arg as NormalizedArg
   } else {
     return { msg: `${arg}` }
+  }
+}
+
+// we can omit the level and the time when running inside AWS_LAMBDA
+const isLambda = typeof process === 'object' && process.env.AWS_LAMBDA_FUNCTION_NAME
+const lambda = (level: LogLevel) => (isLambda ? {} : { time: Date.now(), level })
+
+let context = () => ({})
+export type Context = Record<string, unknown>
+/**
+ * set the properties that should be added to each log entry
+ * @param context : an object or a function returning an object with properties that are added to each log document
+ */
+export function setContext(newContext: Context | (() => Context)) {
+  if (typeof newContext === 'function') {
+    context = () => {
+      try {
+        return newContext()
+      } catch {
+        return {}
+      }
+    }
+  } else if (typeof newContext === 'object') {
+    context = () => newContext
   }
 }

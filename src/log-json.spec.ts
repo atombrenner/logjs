@@ -1,4 +1,9 @@
-import { normalizeArg, mergeArgs } from './log-json'
+import mockConsole from 'jest-mock-console'
+import { setContext } from '.'
+import { logJson, normalizeArg, mergeArgs } from './log-json'
+
+Date.now = () => 1234567890123
+mockConsole(['info'])
 
 describe('normalizeArg', () => {
   it('should use string argument as "msg" property', () => {
@@ -41,5 +46,26 @@ describe('mergeArgs', () => {
   it('should overwrite non "msg" properties from right to left', () => {
     const merged = mergeArgs([{ bla: 1 }, undefined, { bla: 2 }])
     expect(merged.bla).toEqual(2)
+  })
+})
+
+describe('logJson', () => {
+  afterEach(() => setContext({}))
+
+  it('should add level and timestamp if not running on lambda', () => {
+    logJson('info')('message')
+
+    expect(console.info).toHaveBeenLastCalledWith(
+      '{"time":1234567890123,"level":"info","msg":"message"}'
+    )
+  })
+
+  it('should add context', () => {
+    setContext({ app: 'someApp' })
+    logJson('info')('message')
+
+    expect(console.info).toHaveBeenLastCalledWith(
+      '{"app":"someApp","time":1234567890123,"level":"info","msg":"message"}'
+    )
   })
 })

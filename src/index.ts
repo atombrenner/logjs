@@ -1,7 +1,9 @@
-import { LogFunction, logJson } from './log-json'
+import { LogFunction, logJson, setContext } from './log-json'
 
 const isProd = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
+
+export { setContext }
 
 export type Logger = {
   debug: LogFunction

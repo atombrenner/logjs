@@ -13,7 +13,7 @@ a long time on the same servers. They need to take care of writing to files,
 cleaning up old files, aggregating logs. In a serverless world most of those
 requirements are now [YAGNIs](https://martinfowler.com/bliki/Yagni.html).
 
-My goal was to have something really simple, with the focus on
+The goal was to have something really simple, with the focus on
 
 1. usability: every javascript developer can use it
 2. output is formatted as [JSON lines](https://jsonlines.org/)
@@ -23,9 +23,9 @@ My goal was to have something really simple, with the focus on
 When working with Node or the Browser, you already have a logging framework built in.
 It's the console module. You don't need to include it, it exists in the browser
 and in nodejs. The API is known and used by every Javacscript developer.
-In AWS Lambda, the console module is enhanced by AWS to log some interesting
+In AWS Lambda, the console module is enhanced by AWS with some interesting
 data, e.g. the requestId and memory usage. So why not benefit from this?
-The console module just works in the browser and in nodejs, even if writting
+The console module just works in the browser and in nodejs, even if writing
 to process.stdout could save some nanoseconds on node.
 So the basic idea was to stick with the console.log pattern as long as possible
 and add error and json formatting.
@@ -43,23 +43,23 @@ This package does not optimize for:
 ## Responsibility
 
 ```
-+-----------------+                                                +-------------------+
-|  Application    |                                                |  Elasticsearch    |
-|                 |                            +--------------+    |                   |
-|     +--------+  |  stdout  +------------+    | Log Ingester |    |                   |
-|     | logjs  |------------>| Logstream  |--->|              |--->|                   |
-|     +--------+  |  jsonl   |            |    |              |    |                   |
-+-----------------+          +------------+    +--------------+    +-------------------+
++-----------------+                                               +-----------------+
+|  Application    |                                               |  Elasticsearch  |
+|                 |                           +--------------+    |                 |
+|     +--------+  |  stdout  +-----------+    | Log Ingester |    |                 |
+|     | logger |------------>| Logstream |--->|              |--->|                 |
+|     +--------+  |  jsonl   |           |    |              |    |                 |
++-----------------+          +-----------+    +--------------+    +-----------------+
 ```
 
-The only responsibility for the logging framework inside an applications is the
-formatting of structured data as JSON, enriching it with convenience data like levels
-or application names and writing it as fast as possible to stdout.
+The logging framework inside an application is responsible for formatting logs as
+JSON lines and writing them to stdout as fast as possible. Data could be enriched
+with level, timestamp or application names.
 
 The Log Ingester adds additional data to log events, e.g. the ingestion time.
-It can use a convention to derive the application name from the logstream name.
+It can use a convention to derive the application name from the log stream name.
 The Log Ingester is also responsible for handling unstructured data that might be
-written to a logstream. For example, if a node process fails because
+written to log streams. For example, if a node process fails because
 of a missing dependency, node writes an unstructured error message.
 No logging framework can handle this error message.
 Here is an example ingester for [AWS Logstreams and Elasticsearch](https://github.com/atombrenner/aws-log-to-elastic#readme).
@@ -71,7 +71,7 @@ Here is an example ingester for [AWS Logstreams and Elasticsearch](https://githu
 ## Usage
 
 ```ts
-import { log } from '@atombrenner/log-json'
+import { log, setContext } from '@atombrenner/log-json'
 
 log.info('message')
 log.info('message')
@@ -81,14 +81,25 @@ log.info('message with data and error object', { id: 4711 }, error)
 log.info(error) // error only
 
 // the usual console levels are available
-log.debug('')
-log.info('')
-log.warn('')
-log.error('')
+log.debug('something')
+log.info('something')
+log.warn('something')
+log.error('something')
 
 // use string templates for message formatting
 log.info(`${method} ${path}`, { method, path })
 // -> {"msg":"GET /index.html","method":"GET","path":"/index.html"}
+
+// add context to every log (mixin properties to every log)
+setContext({ app: 'my-app' })
+log.info('message') // -> {"app":"my-app","msg":"message"}
+log.info('next message') // -> {"app":"my-app","msg":"next message"}
+
+// if you need a dynamic context, you can provide a function returning the context
+setContext(() => {
+  heapTotal: process.memoryUsage().heapTotal
+})
+log.info('message') // -> {"heapTotal":6667453,msg:"message"}
 ```
 
 ## API
@@ -99,11 +110,17 @@ The signature for all logging functions is identical to `console.log`
 type LogFunction = (message: unknown, ...optional: unknown[])
 ```
 
-Arguments are processed from left to right. Every argument that does not looke like
-an `{}` object or `Error` gets converted to an object with a `msg` property.
+Arguments are processed from left to right. Every argument that is not a
+simple object `{}` or `Error` gets converted to an object with a `msg` property.
 Errors are converted to objects with an `msg` and `stack` property.
-Then all objects are merged. Duplicate properties are overwritten by the right
-most one with the exception of `msg`, where all values are concatenated.
+Then all objects are merged. Duplicate properties are overwritten by the
+rightmost one with the exception of `msg`, where all values are concatenated.
+
+For `NODE_ENV='prod'` logs are written as JSON.
+For `NODE_ENV='test'` all logs are swallowed to keep test output clean.
+If `NODE_ENV` is undefined all arguments are passed through to `console` methods.
+When running in AWS Lambda (detected by the presence of `process.env.AWS_LAMBDA_FUNCTION_NAME`)
+timestamp and level are omitted because the AWS lambda environment adds those.
 
 ### Examples of some edge cases
 
