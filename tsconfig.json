@@ -1,25 +1,10 @@
 {
+  "extends": "@tsconfig/node12",
   "compilerOptions": {
     "outDir": "lib",
-    "module": "commonjs",
-    "target": "es2020",
-    "lib": ["es2020"],
     "declaration": true,
     "sourceMap": true,
     "allowJs": false,
-    "moduleResolution": "node",
-    "rootDirs": ["src"],
-    "baseUrl": "src",
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "noUnusedLocals": false,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "rootDirs": ["src"]
   }
 }
