@@ -1,6 +1,6 @@
 # npm-log-json
 
-Pragmatic JSON logging with javascript for humans and Elasticsearch.
+Pragmatic JSON logging with javascript for humans and Elasticsearch
 
 ## Motivation
 
@@ -112,13 +112,13 @@ type LogFunction = (message: unknown, ...optional: unknown[])
 
 Arguments are processed from left to right. Every argument that is not a
 simple object `{}` or `Error` gets converted to an object with a `msg` property.
-Errors are converted to objects with an `msg` and `stack` property.
+Errors are converted to objects with a `msg` and `stack` property.
 Then all objects are merged. Duplicate properties are overwritten by the
 rightmost one with the exception of `msg`, where all values are concatenated.
 
 JSON logging is enabled if `NODE_ENV=production` or `AWS_LAMBDA_FUNCTION_NAME`
 has a value. If `NODE_ENV=test` then all logs are swallowed to keep test output clean.
-Else we assume we run in a local development environement and all arguments are passed
+Else we assume we run in a local development environment and pass all arguments
 unchanged to `console` methods.
 When running in AWS Lambda (detected by the presence of `process.env.AWS_LAMBDA_FUNCTION_NAME`)
 timestamp and level are omitted because the AWS lambda environment adds those.
