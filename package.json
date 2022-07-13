@@ -8,6 +8,7 @@
   "repository": "github:atombrenner/npm-log-json",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "prepare": "rm -rf lib && tsc && jest",
     "build": "tsc",
