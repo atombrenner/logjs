@@ -1,3 +1,5 @@
+import { env } from './env'
+
 export type LogFunction = (msg: unknown, ...optional: unknown[]) => void
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -34,9 +36,9 @@ export function normalizeArg(arg: unknown): NormalizedArg {
   }
 }
 
-// we can omit the level and the time when running inside AWS_LAMBDA
-const isLambda = typeof process === 'object' && process.env.AWS_LAMBDA_FUNCTION_NAME
-const lambda = (level: LogLevel) => (isLambda ? {} : { time: Date.now(), level })
+const lambda = env.AWS_LAMBDA_FUNCTION_NAME
+  ? () => ({}) // we can omit the level and time when running inside AWS_LAMBDA function
+  : (level: LogLevel) => ({ time: Date.now(), level })
 
 let context = () => ({})
 export type Context = Record<string, unknown>

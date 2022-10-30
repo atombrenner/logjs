@@ -1,7 +1,8 @@
 import { LogFunction, logJson, setContext } from './log-json'
+import { env } from './env'
 
-const isProd = process.env.NODE_ENV === 'production' || process.env.AWS_LAMBDA_FUNCTION_NAME
-const isTest = process.env.NODE_ENV === 'test'
+const isProd = env.NODE_ENV === 'production' || env.AWS_LAMBDA_FUNCTION_NAME
+const isTest = env.NODE_ENV === 'test'
 
 export { setContext }
 
