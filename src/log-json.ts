@@ -1,7 +1,9 @@
 import { env } from './env'
 
 export type LogFunction = (msg: unknown, ...optional: unknown[]) => void
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+
+export const logLevels = ['debug', 'info', 'warn', 'error'] as const
+export type LogLevel = typeof logLevels[number]
 
 export function logJson(level: LogLevel): LogFunction {
   return (...args: unknown[]) => {

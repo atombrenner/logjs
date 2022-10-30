@@ -1,39 +1,24 @@
-import { LogFunction, logJson, setContext } from './log-json'
+import { LogFunction, logJson, logLevels, LogLevel, setContext } from './log-json'
 import { env } from './env'
 
-const isProd = env.NODE_ENV === 'production' || env.AWS_LAMBDA_FUNCTION_NAME
-const isTest = env.NODE_ENV === 'test'
+export type Logger = Record<LogLevel, LogFunction>
 
+const makeLogger = () => {
+  if (env.NODE_ENV === 'test') return makeTestLogger()
+  if (env.NODE_ENV === 'production' || env.AWS_LAMBDA_FUNCTION_NAME) return makeProdLogger()
+  return makeDevLogger()
+}
+
+const makeProdLogger = () =>
+  Object.fromEntries(logLevels.map((level) => [level, logJson(level)])) as Logger
+
+const makeDevLogger = () =>
+  Object.fromEntries(logLevels.map((level) => [level, console[level]])) as Logger
+
+const makeTestLogger = () =>
+  Object.fromEntries(logLevels.map((level) => [level, logNothing])) as Logger
+
+const logNothing: LogFunction = () => {}
+
+export const log: Logger = makeLogger()
 export { setContext }
-
-export type Logger = {
-  debug: LogFunction
-  info: LogFunction
-  warn: LogFunction
-  error: LogFunction
-}
-
-function logNothing() {}
-
-const devLogger: Logger = {
-  debug: console.debug,
-  info: console.info,
-  warn: console.warn,
-  error: console.error,
-}
-
-const prodLogger: Logger = {
-  debug: logJson('debug'),
-  info: logJson('info'),
-  warn: logJson('warn'),
-  error: logJson('error'),
-}
-
-const testLogger: Logger = {
-  debug: logNothing,
-  info: logNothing,
-  warn: logNothing,
-  error: logNothing,
-}
-
-export const log: Logger = isTest ? testLogger : isProd ? prodLogger : devLogger
