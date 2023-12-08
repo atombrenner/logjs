@@ -7,7 +7,7 @@ async function execNodeScript(
   return new Promise((resolve) => {
     let stdout = ''
     let stderr = ''
-    const childProcess = spawn('npx', ['ts-node', '-T'], {
+    const childProcess = spawn('node', [], {
       env: { ...process.env, ...env },
     })
     childProcess.stdout.on('data', (data) => {
@@ -26,7 +26,7 @@ async function execNodeScript(
 
 describe('log', () => {
   const script = `
-   import { log } from './src'
+   const { log } = require('.')
    Date.now = () => 123456789
    log.debug('a debug message')
    log.info('an info message', { meta: 1 })
@@ -38,17 +38,15 @@ describe('log', () => {
     it('should log only debug messages', async () => {
       const { stdout, stderr, exitCode } = await execNodeScript(script, { NODE_ENV: 'test' })
 
-      expect(exitCode).toEqual(0)
       expect(stderr).toEqual('')
       expect(stdout).toEqual('')
+      expect(exitCode).toEqual(0)
     })
   })
 
   describe('with NODE_ENV=production', () => {
     it('should output json lines', async () => {
       const { stdout, stderr, exitCode } = await execNodeScript(script, { NODE_ENV: 'production' })
-
-      expect(exitCode).toEqual(0)
 
       const lines = stdout.split('\n')
       expect(lines[0]).toEqual('{"time":123456789,"level":"debug","msg":"a debug message"}')
@@ -59,6 +57,8 @@ describe('log', () => {
       expect(stderrLines[0].stack).toMatch(/^Error: error/)
       expect(stderrLines[1]).toMatchObject({ level: 'error', msg: 'Error message: error', meta: 2 })
       expect(stderrLines[1].stack).toMatch(/^Error: error/)
+
+      expect(exitCode).toEqual(0)
     })
   })
 
@@ -77,7 +77,7 @@ describe('log', () => {
   describe('with AWS_LAMBDA_FUNCTION_NAME defined', () => {
     it('should not add time and level', async () => {
       const script = `
-      import { log } from './src'
+      const { log } = require('.')
       Date.now = () => 123456789
       log.info('message')`
 
@@ -86,9 +86,9 @@ describe('log', () => {
         AWS_LAMBDA_FUNCTION_NAME: 'someName',
       })
 
-      expect(exitCode).toEqual(0)
       expect(stderr).toEqual('')
       expect(stdout.trim()).toEqual('{"msg":"message"}')
+      expect(exitCode).toEqual(0)
     })
   })
 })

@@ -118,7 +118,7 @@ rightmost one except for `msg`, where all values are concatenated.
 
 JSON logging is enabled if `NODE_ENV=production` or `AWS_LAMBDA_FUNCTION_NAME`
 has a value. If `NODE_ENV=test` then all logs are swallowed to keep the output clean.
-Else we assume we run in a local development environment and pass all arguments
+Otherwise, we assume we run in a local development environment and pass all arguments
 unchanged to `console` methods.
 When running in AWS Lambda (detected by the presence of `process.env.AWS_LAMBDA_FUNCTION_NAME`)
 timestamp and level are omitted because the AWS lambda environment adds those.
