@@ -2,6 +2,7 @@
 lib/*.spec.*
 lib/*.test.*
 src/
-jest.config.js
+*.config.js
 .*
+tsconfig.json
 
